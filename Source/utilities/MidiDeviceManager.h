@@ -3,6 +3,7 @@
 
 #include <JuceHeader.h>
 
+
 struct InputOutputPair
 {
     juce::MidiDeviceInfo inputDevice;
@@ -11,6 +12,7 @@ struct InputOutputPair
     bool operator== (const InputOutputPair& other) const noexcept { return inputDevice == other.inputDevice && outputDevice == other.outputDevice; }
     bool operator!= (const InputOutputPair& other) const noexcept { return ! operator== (other); }
 };
+
 
 class MidiDeviceManager : public juce::Timer
 {
@@ -36,6 +38,9 @@ public:
 
     void updateDeviceList()
     {
+        // TODO: on windows, device identifiers should be the same for input and output devices (of the same device). on macOS they are different (as juce just uses hash for <devicename>.<input/output> we might want to handle that differently!
+
+
         const auto inputs = juce::MidiInput::getAvailableDevices();
         const auto outputs = juce::MidiOutput::getAvailableDevices();
 
@@ -74,6 +79,17 @@ public:
     void removeListener (Listener* listenerToAdd)
     {
         listeners.remove (listenerToAdd);
+    }
+
+    InputOutputPair getPair (juce::String deviceName)
+    {
+        for (auto& dev : availableDevices)
+        {
+            if (dev.inputDevice.name == deviceName)
+                return dev;
+        }
+
+        return InputOutputPair();
     }
 
 

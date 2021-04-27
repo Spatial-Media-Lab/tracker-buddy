@@ -25,7 +25,13 @@ private:
     MidiDeviceManager midiDeviceManager;
     MidiDeviceManagerComponent midiDeviceManagerComponent;
 
-    TrackerInterface tracker;
+    std::unique_ptr<TrackerInterface> tracker;
+    std::unique_ptr<TrackerInterfaceComponent> trackerComponent;
+
+    juce::TextEditor deviceEditor;
+
+
+    void createDeviceInterface();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

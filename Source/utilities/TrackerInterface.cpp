@@ -2,17 +2,22 @@
 
 #include "TrackerInterface.h"
 
-TrackerInterface::TrackerInterface()
+TrackerInterface::TrackerInterface (MidiDeviceManager& manager, InputOutputPair device) :
+inputOutputPair (device),
+midiDeviceManager (manager)
 {
     activity = false;
     connected = false;
-    currentMidiDeviceName.addListener (this);
+
     startTimer (1000);
+
+    midiDeviceManager.addListener (this);
 }
 
 TrackerInterface::~TrackerInterface()
 {
-    closeMidiInput();
+    midiDeviceManager.removeListener (this);
+    closeMidiDevices();
 }
 
 
@@ -73,51 +78,30 @@ void TrackerInterface::notifyListeners()
 
 void TrackerInterface::timerCallback()
 {
-    if (midiInput == nullptr && ! getCurrentMidiDeviceName().isEmpty())
-        openMidiInput();
 }
 
-void TrackerInterface::openMidiInput()
+void TrackerInterface::openMidiDevices()
 {
-    if (unsettingDevice)
-        return;
-
-    const juce::String deviceName = getCurrentMidiDeviceName();
-    if (deviceName.isEmpty())
-        return closeMidiInput(); // <- not sure if that syntax is totally wrong or brilliant!
-
-    
     const std::unique_lock<std::mutex> scopedLock (changingMidiDevice);
 
-    juce::StringArray devices = juce::MidiInput::getDevices();
-    auto outputDevices = juce::MidiOutput::getAvailableDevices();
+    midiInput = juce::MidiInput::openDevice (inputOutputPair.inputDevice.identifier, this);
+    midiOutput = juce::MidiOutput::openDevice (inputOutputPair.outputDevice.identifier);
 
-    for (auto& dev : devices)
-        DBG (dev);
-
-    for (auto& dev : outputDevices)
-        DBG (dev.identifier);
-
-    const int index = devices.indexOf (deviceName);
-    const auto outDev = outputDevices[index].identifier;
-    if (index != -1)
+    if (midiInput == nullptr || midiOutput == nullptr)
     {
-        midiInput = juce::MidiInput::openDevice (index, this);
-        midiOutput = juce::MidiOutput::openDevice (outDev);
+        midiInput = nullptr;
+        midiOutput = nullptr;
 
-        if (midiInput == nullptr)
-        {
-            listeners.call ([] (Listener& l) { l.midiOpenError(); });
-            return;
-        }
-
-        midiInput->start();
-        listeners.call ([] (Listener& l) { l.midiInputOpened(); });
+        listeners.call ([] (Listener& l) { l.midiOpenError(); });
+        return;
     }
 
+    midiInput->start();
+
+    listeners.call ([] (Listener& l) { l.midiInputOpened(); });
 }
 
-void TrackerInterface::closeMidiInput()
+void TrackerInterface::closeMidiDevices()
 {
     const std::unique_lock<std::mutex> lock (changingMidiDevice);
 
@@ -128,19 +112,7 @@ void TrackerInterface::closeMidiInput()
         listeners.call ([] (Listener& l) { l.midiInputClosed(); });
     }
 
-    juce::ScopedValueSetter<bool> unset (unsettingDevice, true);
-    currentMidiDeviceName = juce::String(); // hoping there's not actually a MidiDevice without a name!
     return;
-}
-
-juce::String TrackerInterface::getCurrentMidiDeviceName()
-{
-    return currentMidiDeviceName.toString();
-}
-
-void TrackerInterface::valueChanged (juce::Value& value)
-{
-    openMidiInput();
 }
 
 // ============================================================================================
