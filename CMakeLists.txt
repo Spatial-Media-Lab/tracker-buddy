@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 project(tracker_companion VERSION 0.0.1)
 
 add_subdirectory(JUCE)
