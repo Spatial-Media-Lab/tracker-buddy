@@ -17,9 +17,9 @@ public:
     public:
         Listener() {}
         virtual ~Listener() {}
-        virtual void midiInputOpened() {}
-        virtual void midiInputClosed() {}
-        virtual void midiOpenError() {}
+        virtual void connected() {}
+        virtual void disconnected() {}
+        virtual void connectionFailed() {}
         virtual void newQuaternionData (const Quaternion& newQuaternion) { }
     };
 
@@ -30,11 +30,20 @@ public:
 
     void devicesChanged (const juce::Array<InputOutputPair>& devices) override
     {
-        // TODO: if device offline, try to reconnect
+        if (isDeviceOpen())
+        {
+            if (! devices.contains (inputOutputPair))
+                closeMidiDevices();
+        }
+        else
+        {
+            if (devices.contains (inputOutputPair))
+            openMidiDevices();
+        }
     }
 
     void closeMidiDevices();
-    bool isDeviceOpen() { return midiInput != nullptr; }
+    bool isDeviceOpen() { return midiInput != nullptr && midiOutput != nullptr; }
 
 
     Quaternion getQuaternion() const;
@@ -53,8 +62,6 @@ public:
     }
 
     // = Flags ========================================================================
-    std::atomic<bool> activity;
-    std::atomic<bool> connected;
 
     void openMidiDevices();
 
@@ -62,11 +69,9 @@ private:
     void timerCallback() override;
 
     void handleIncomingMidiMessage (juce::MidiInput *source, const juce::MidiMessage &message) override;
-    void updateQuaternionsFromYawPitchRoll();
 
     MidiDeviceManager& midiDeviceManager;
     InputOutputPair inputOutputPair;
-
 
     std::mutex changingMidiDevice;
 

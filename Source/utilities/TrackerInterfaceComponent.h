@@ -76,17 +76,17 @@ public:
     }
 
 
-    void midiInputOpened() override
+    void connected() override
     {
         activity.setConnected (true);
     }
 
-    void midiInputClosed() override
+    void disconnected() override
     {
         activity.setConnected (false);
     }
 
-    void midiOpenError() override {}
+    void connectionFailed() override {}
 
     void newQuaternionData (const Quaternion& newQuaternion) override
     {

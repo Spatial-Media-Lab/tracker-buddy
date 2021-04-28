@@ -6,8 +6,6 @@ TrackerInterface::TrackerInterface (MidiDeviceManager& manager, InputOutputPair 
 inputOutputPair (device),
 midiDeviceManager (manager)
 {
-    connected = false;
-
     startTimer (1000);
 
     midiDeviceManager.addListener (this);
@@ -89,13 +87,13 @@ void TrackerInterface::openMidiDevices()
         midiInput = nullptr;
         midiOutput = nullptr;
 
-        listeners.call ([] (Listener& l) { l.midiOpenError(); });
+        listeners.call ([] (Listener& l) { l.connectionFailed(); });
         return;
     }
 
     midiInput->start();
 
-    listeners.call ([] (Listener& l) { l.midiInputOpened(); });
+    listeners.call ([] (Listener& l) { l.connected(); });
 }
 
 void TrackerInterface::closeMidiDevices()
@@ -106,10 +104,12 @@ void TrackerInterface::closeMidiDevices()
     {
         midiInput->stop();
         midiInput.reset();
-        listeners.call ([] (Listener& l) { l.midiInputClosed(); });
     }
 
-    return;
+    if (midiOutput != nullptr)
+        midiOutput.reset();
+
+    listeners.call ([] (Listener& l) { l.disconnected(); });
 }
 
 // ============================================================================================
