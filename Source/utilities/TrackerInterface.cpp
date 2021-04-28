@@ -6,7 +6,6 @@ TrackerInterface::TrackerInterface (MidiDeviceManager& manager, InputOutputPair 
 inputOutputPair (device),
 midiDeviceManager (manager)
 {
-    activity = false;
     connected = false;
 
     startTimer (1000);
@@ -23,8 +22,6 @@ TrackerInterface::~TrackerInterface()
 
 void TrackerInterface::handleIncomingMidiMessage (juce::MidiInput* source, const juce::MidiMessage &message)
 {
-    activity = true;
-
     switch (message.getControllerNumber())
     {
         case 48: qwLsb = message.getControllerValue(); break;
