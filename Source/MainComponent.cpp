@@ -36,7 +36,6 @@ void MainComponent::resized()
 
 void MainComponent::createDeviceInterface()
 {
-    trackerComponent.release();
 
     const auto deviceName = deviceEditor.getText();
     const auto pair = midiDeviceManager.getPair (deviceName);
