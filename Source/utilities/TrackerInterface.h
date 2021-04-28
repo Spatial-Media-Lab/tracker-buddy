@@ -82,7 +82,7 @@ private:
 
     int yawLsb = 0, pitchLsb = 0, rollLsb = 0;
     int qwLsb = 0, qxLsb = 0, qyLsb = 0, qzLsb = 0;
-    float yawInRad = 0.0f, pitchInRad = 0.0f, rollInRad = 0.0f;
+
     juce::Atomic<float> qw = 1.0f, qx = 0.0f, qy = 0.0f, qz = 0.0f;
 };
 
