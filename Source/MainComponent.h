@@ -2,11 +2,91 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "utilities/MidiDeviceManager.h"
-#include "utilities/MidiDeviceManagerComponent.h"
-#include "utilities/TrackerInterface.h"
-#include "utilities/TrackerInterfaceComponent.h"
+#include "tracker/MidiDeviceManager.h"
+#include "tracker/MidiDeviceManagerComponent.h"
+#include "tracker/TrackerInterface.h"
+#include "tracker/TrackerInterfaceComponent.h"
 
+#include "destinations/Destination.h"
+
+struct Connection
+{
+    class Listener
+    {
+    public:
+        Listener() {}
+        virtual ~Listener() {}
+        virtual void destinationAdded (Destination& destination) {}
+        virtual void destinationRemoved (const Destination& destination) {}
+    };
+
+
+    Connection (MidiDeviceManager& m, InputOutputPair device) :
+    source (m, device)
+    {}
+
+    TrackerInterface source;
+
+
+    void addListener (Listener* newListener) { listeners.add (newListener); }
+    void removeListener (Listener* listener) { listeners.remove (listener); }
+
+
+    void addDestination (std::unique_ptr<Destination> newDestination)
+    {
+        listeners.call ([&] (Listener& l) { l.destinationAdded (*newDestination); } );
+        destinations.push_back (std::move (newDestination));
+    }
+
+private:
+    juce::ListenerList<Listener> listeners;
+    std::list<std::unique_ptr<Destination>> destinations;
+};
+
+
+struct ConnectionComponent : public juce::Component, public Connection::Listener
+{
+    ConnectionComponent (Connection& c) : connection (c), sourceComponent (c.source)
+    {
+        addAndMakeVisible (sourceComponent);
+        connection.addListener (this);
+    }
+
+    ~ConnectionComponent() override
+    {
+        connection.removeListener (this);
+    }
+
+    void destinationAdded (Destination& destination) override
+    {
+        auto component = destination.createComponent();
+        addAndMakeVisible (component.get());
+        destinationComponents.push_back (std::move (component));
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+
+    }
+
+    void resized() override
+    {
+        auto bounds = getLocalBounds();
+        auto half = bounds.getWidth() / 2;
+
+        sourceComponent.setBounds (bounds.removeFromLeft (half));
+
+        for (auto& c : destinationComponents)
+        {
+            c->setBounds (bounds);
+        }
+    }
+
+private:
+    TrackerInterfaceComponent sourceComponent;
+    std::list<std::unique_ptr<juce::Component>> destinationComponents;
+    Connection& connection;
+};
 
 
 class MainComponent   : public juce::Component
@@ -21,12 +101,13 @@ public:
 
 private:
 
-//==============================================================================
+    //==============================================================================
     MidiDeviceManager midiDeviceManager;
     MidiDeviceManagerComponent midiDeviceManagerComponent;
 
-    std::unique_ptr<TrackerInterface> tracker;
-    std::unique_ptr<TrackerInterfaceComponent> trackerComponent;
+    std::list<std::unique_ptr<Connection>> connections;
+    std::list<std::unique_ptr<ConnectionComponent>> components;
+
 
     juce::TextEditor deviceEditor;
 

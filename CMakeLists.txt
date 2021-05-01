@@ -20,13 +20,15 @@ target_sources(companion
         Source/MainComponent.cpp
         Source/MainComponent.h
 
-        Source/utilities/TrackerInterface.cpp
-        Source/utilities/TrackerInterface.h
-        Source/utilities/TrackerInterfaceComponent.h
-        Source/utilities/Quaternion.h
-        Source/utilities/TaitBryan.h
-        Source/utilities/MidiDeviceManager.h
-        Source/utilities/MidiDeviceManagerComponent.h
+        Source/destinations/Destination.h
+        Source/destinations/Visualizer.h
+        Source/tracker/TrackerInterface.cpp
+        Source/tracker/TrackerInterface.h
+        Source/tracker/TrackerInterfaceComponent.h
+        Source/tracker/Quaternion.h
+        Source/tracker/TaitBryan.h
+        Source/tracker/MidiDeviceManager.h
+        Source/tracker/MidiDeviceManagerComponent.h
         )
 
 

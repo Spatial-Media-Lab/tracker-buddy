@@ -1,4 +1,6 @@
 #include "MainComponent.h"
+#include "destinations/Visualizer.h"
+
 
 //==============================================================================
 MainComponent::MainComponent() : midiDeviceManagerComponent (midiDeviceManager)
@@ -8,7 +10,7 @@ MainComponent::MainComponent() : midiDeviceManagerComponent (midiDeviceManager)
     addAndMakeVisible (deviceEditor);
     deviceEditor.onReturnKey = [&] () { createDeviceInterface(); };
 
-    setSize (600, 400);
+    setSize (800, 600);
 }
 
 //==============================================================================
@@ -26,26 +28,29 @@ void MainComponent::resized()
     row.removeFromLeft(20);
     deviceEditor.setBounds (row.removeFromBottom (30));
 
-    if (trackerComponent)
+    for (auto& t : components)
     {
-        bounds.removeFromTop (20);
-        trackerComponent->setBounds (bounds);
+        bounds.removeFromTop (10);
+        t->setBounds (bounds.removeFromTop (40));
     }
 }
 
 
 void MainComponent::createDeviceInterface()
 {
-
     const auto deviceName = deviceEditor.getText();
     const auto pair = midiDeviceManager.getPair (deviceName);
 
 
-    tracker = std::make_unique<TrackerInterface> (midiDeviceManager, pair);
-    trackerComponent = std::make_unique<TrackerInterfaceComponent> (*tracker);
+    auto newConnection = std::make_unique<Connection> (midiDeviceManager, pair);
+    auto newComponent = std::make_unique<ConnectionComponent> (*newConnection);
+    newConnection->addDestination (std::make_unique<Visualizer> (newConnection->source));
 
-    tracker->openMidiDevices();
-    addAndMakeVisible (*trackerComponent);
+    newConnection->source.openMidiDevices();
+    addAndMakeVisible (newComponent.get());
 
+
+    connections.push_back (std::move (newConnection));
+    components.push_back (std::move (newComponent));
     resized();
 }
