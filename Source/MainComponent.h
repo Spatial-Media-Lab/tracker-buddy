@@ -8,6 +8,7 @@
 #include "tracker/TrackerInterfaceComponent.h"
 
 #include "destinations/Destination.h"
+#include "destinations/Visualizer.h"
 
 struct Connection
 {
@@ -49,19 +50,32 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
     ConnectionComponent (Connection& c) : connection (c), sourceComponent (c.source)
     {
         addAndMakeVisible (sourceComponent);
+
+        addDestinationButton.setButtonText ("Add Destination...");
+        addDestinationButton.onClick = [&] ()
+        {
+            connection.addDestination (std::make_unique<Visualizer> (connection.source));
+        };
+
+        addAndMakeVisible (addDestinationButton);
+
+
         connection.addListener (this);
     }
+
 
     ~ConnectionComponent() override
     {
         connection.removeListener (this);
     }
 
+
     void destinationAdded (Destination& destination) override
     {
         auto component = destination.createComponent();
         addAndMakeVisible (component.get());
         destinationComponents.push_back (std::move (component));
+        resized();
     }
 
     void paint (juce::Graphics& g) override
@@ -76,9 +90,16 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
         sourceComponent.setBounds (bounds.removeFromLeft (half));
 
-        for (auto& c : destinationComponents)
+        if (destinationComponents.empty())
         {
-            c->setBounds (bounds);
+            addDestinationButton.setVisible (true);
+            addDestinationButton.setBounds (bounds);
+        }
+        else
+        {
+            addDestinationButton.setVisible (false);
+            for (auto& c : destinationComponents)
+                c->setBounds (bounds);
         }
     }
 
@@ -86,6 +107,8 @@ private:
     TrackerInterfaceComponent sourceComponent;
     std::list<std::unique_ptr<juce::Component>> destinationComponents;
     Connection& connection;
+
+    juce::TextButton addDestinationButton;
 };
 
 

@@ -1,5 +1,4 @@
 #include "MainComponent.h"
-#include "destinations/Visualizer.h"
 
 
 //==============================================================================
@@ -44,7 +43,6 @@ void MainComponent::createDeviceInterface()
 
     auto newConnection = std::make_unique<Connection> (midiDeviceManager, pair);
     auto newComponent = std::make_unique<ConnectionComponent> (*newConnection);
-    newConnection->addDestination (std::make_unique<Visualizer> (newConnection->source));
 
     newConnection->source.openMidiDevices();
     addAndMakeVisible (newComponent.get());
