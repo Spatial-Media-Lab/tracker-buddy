@@ -20,10 +20,9 @@ struct Connection
 
     Connection (MidiDeviceManager& m, InputOutputPair device) :
     source (m, device)
-    {}
-
-    TrackerInterface source;
-
+    {
+        source.openMidiDevices();
+    }
 
     void addListener (Listener* newListener) { listeners.add (newListener); }
     void removeListener (Listener* listener) { listeners.remove (listener); }
@@ -38,15 +37,22 @@ struct Connection
         destinations.push_back (std::move (newDestination));
     }
 
+    TrackerInterface& getSource()
+    {
+        return source;
+    }
+
 private:
-    juce::ListenerList<Listener> listeners;
+    TrackerInterface source;
     std::list<std::unique_ptr<Destination>> destinations;
+
+    juce::ListenerList<Listener> listeners;
 };
 
 
 struct ConnectionComponent : public juce::Component, public Connection::Listener
 {
-    ConnectionComponent (Connection& c) : connection (c), sourceComponent (c.source)
+    ConnectionComponent (Connection& c) : connection (c), sourceComponent (c.getSource())
     {
         addAndMakeVisible (sourceComponent);
 
@@ -56,6 +62,8 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         addAndMakeVisible (addDestinationButton);
 
         connection.addListener (this);
+
+        setSize (400, 80);
     }
 
 
@@ -77,7 +85,7 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
         if (result > 0)
         {
-            connection.addDestination (DestinationFactory::createDestination (connection.source, list[result - 1]));
+            connection.addDestination (DestinationFactory::createDestination (connection.getSource(), list[result - 1]));
         }
     }
 

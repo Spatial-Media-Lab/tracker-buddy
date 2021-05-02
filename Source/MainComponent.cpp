@@ -2,13 +2,14 @@
 
 
 //==============================================================================
-MainComponent::MainComponent()
+MainComponent::MainComponent() : connectionList (connectionManager)
 {
+    viewPort.setViewedComponent (&connectionList, false);
+    addAndMakeVisible (viewPort);
 
     addDeviceButton.setButtonText ("Add device...");
     addDeviceButton.onClick = [&] () { showDeviceList(); };
     addAndMakeVisible (addDeviceButton);
-
 
     setSize (800, 600);
 }
@@ -27,11 +28,7 @@ void MainComponent::resized()
 
     bounds.removeFromTop (10);
 
-    for (auto& t : components)
-    {
-        bounds.removeFromTop (10);
-        t->setBounds (bounds.removeFromTop (100));
-    }
+    viewPort.setBounds (bounds);
 }
 
 void MainComponent::showDeviceList()
@@ -53,13 +50,8 @@ void MainComponent::showDeviceList()
 void MainComponent::createDeviceInterface (InputOutputPair pair)
 {
     auto newConnection = std::make_unique<Connection> (midiDeviceManager, pair);
-    auto newComponent = std::make_unique<ConnectionComponent> (*newConnection);
 
-    newConnection->source.openMidiDevices();
-    addAndMakeVisible (newComponent.get());
+    connectionManager.addConnection (std::move (newConnection));
 
-
-    connections.push_back (std::move (newConnection));
-    components.push_back (std::move (newComponent));
     resized();
 }

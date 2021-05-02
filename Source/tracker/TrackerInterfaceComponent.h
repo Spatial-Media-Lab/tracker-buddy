@@ -58,8 +58,7 @@ public:
     TrackerInterfaceComponent (TrackerInterface& interface) :
     trackerInterface (interface)
     {
-        trackerInterface.addListener (this);
-
+        activity.setConnected (trackerInterface.isDeviceOpen());
         addAndMakeVisible (activity);
 
         hueSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
@@ -67,6 +66,7 @@ public:
         hueSlider.onValueChange = [&] () { trackerInterface.setHue (hueSlider.getValue()); };
         addAndMakeVisible (hueSlider);
 
+        trackerInterface.addListener (this);
         startTimer (30);
     }
 
