@@ -81,15 +81,9 @@ public:
         listeners.remove (listenerToAdd);
     }
 
-    InputOutputPair getPair (juce::String deviceName)
+    juce::Array<InputOutputPair> getAvailableDevices() const
     {
-        for (auto& dev : availableDevices)
-        {
-            if (dev.inputDevice.name == deviceName)
-                return dev;
-        }
-
-        return InputOutputPair();
+        return availableDevices;
     }
 
 
@@ -100,6 +94,19 @@ private:
     void swapLists (juce::Array<InputOutputPair>& newList)
     {
         std::swap (availableDevices, newList);
+
+
+        std::cout << "Available devices:" << std::endl;
+        for (auto& d : availableDevices)
+        {
+            std::cout << "-"
+                      << "\tINPUT " << d.inputDevice.name << " (" << d.inputDevice.identifier << ")\n"
+                      << "\tOUTPUT " << d.outputDevice.name << " (" << d.outputDevice.identifier << ")" <<
+                      std::endl;
+        }
+
+        std::cout << std::endl;
+
 
         // notify listeners
         listeners.call ([&] (Listener& l) { l.devicesChanged (availableDevices); } );

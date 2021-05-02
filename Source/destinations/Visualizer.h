@@ -54,13 +54,17 @@ public:
     void newQuaternionData (const Quaternion& q) override
     {
         quat = q;
-        std::cout << q.w << " "<< q.x << " " << q.y << " " << q.z << std::endl;
     }
 
 
     std::unique_ptr<juce::Component> createComponent() override
     {
         return std::make_unique<Visualizer::Component> (*this);
+    }
+
+    std::string getName() const override
+    {
+        return "Visualizer";
     }
 
     Quaternion getQuaternion()

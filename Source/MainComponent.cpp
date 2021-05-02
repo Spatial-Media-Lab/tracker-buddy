@@ -2,12 +2,13 @@
 
 
 //==============================================================================
-MainComponent::MainComponent() : midiDeviceManagerComponent (midiDeviceManager)
+MainComponent::MainComponent()
 {
-    addAndMakeVisible (midiDeviceManagerComponent);
 
-    addAndMakeVisible (deviceEditor);
-    deviceEditor.onReturnKey = [&] () { createDeviceInterface(); };
+    addDeviceButton.setButtonText ("Add device...");
+    addDeviceButton.onClick = [&] () { showDeviceList(); };
+    addAndMakeVisible (addDeviceButton);
+
 
     setSize (800, 600);
 }
@@ -21,26 +22,36 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
     auto bounds = getLocalBounds().reduced (20);
-    auto row = bounds.removeFromTop (200);
 
-    midiDeviceManagerComponent.setBounds (row.removeFromLeft (400));
-    row.removeFromLeft(20);
-    deviceEditor.setBounds (row.removeFromBottom (30));
+    addDeviceButton.setBounds (bounds.removeFromTop (40));
+
+    bounds.removeFromTop (10);
 
     for (auto& t : components)
     {
         bounds.removeFromTop (10);
-        t->setBounds (bounds.removeFromTop (40));
+        t->setBounds (bounds.removeFromTop (100));
     }
 }
 
-
-void MainComponent::createDeviceInterface()
+void MainComponent::showDeviceList()
 {
-    const auto deviceName = deviceEditor.getText();
-    const auto pair = midiDeviceManager.getPair (deviceName);
+    auto devices = midiDeviceManager.getAvailableDevices();
+
+    juce::PopupMenu m;
+    m.addSectionHeader ("Available devices");
+    for (int i = 0; i < devices.size(); ++i)
+        m.addItem (i + 1, devices[i].inputDevice.name);
+
+    const auto result = m.show();
+
+    if (result > 0)
+        createDeviceInterface (devices[result - 1]);
+}
 
 
+void MainComponent::createDeviceInterface (InputOutputPair pair)
+{
     auto newConnection = std::make_unique<Connection> (midiDeviceManager, pair);
     auto newComponent = std::make_unique<ConnectionComponent> (*newConnection);
 
