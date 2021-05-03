@@ -4,6 +4,7 @@ set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 project(tracker_companion VERSION 0.0.1)
 
+set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(JUCE)
 
 juce_add_gui_app(companion

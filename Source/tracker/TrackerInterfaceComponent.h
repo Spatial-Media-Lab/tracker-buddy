@@ -55,6 +55,8 @@ private:
 class TrackerInterfaceComponent : public juce::Component, public TrackerInterface::Listener, public juce::Timer
 {
 public:
+    static int getIdealHeight() { return 80; };
+
     TrackerInterfaceComponent (TrackerInterface& interface) :
     trackerInterface (interface)
     {
@@ -95,7 +97,8 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-
+        g.setColour (juce::Colours::cornflowerblue.withAlpha (0.1f));
+        g.fillAll();
     }
 
     void resized() override

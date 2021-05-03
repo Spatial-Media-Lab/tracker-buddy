@@ -9,6 +9,11 @@
 class Destination : public TrackerInterface::Listener
 {
 public:
+    struct Widget : public juce::Component
+    {
+        virtual int getWidgetHeight() = 0;
+    };
+    
     Destination (TrackerInterface& source) : tracker (source)
     {
         tracker.addListener (this);
@@ -19,7 +24,7 @@ public:
         tracker.removeListener (this);
     }
 
-    virtual std::unique_ptr<juce::Component> createComponent() = 0;
+    virtual std::unique_ptr<Widget> createWidget() = 0;
     virtual std::string getName() const = 0;
 private:
     TrackerInterface& tracker;

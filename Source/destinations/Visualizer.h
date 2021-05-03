@@ -10,7 +10,7 @@
 
 class Visualizer : public Destination
 {
-    class Component : public juce::Component, private juce::Timer
+    class Component : public Destination::Widget, private juce::Timer
     {
     public:
         Component (Visualizer& v) : visualizer (v)
@@ -23,6 +23,9 @@ class Visualizer : public Destination
             using namespace juce;
 
             auto b = getLocalBounds();
+            g.setColour (Colours::cornflowerblue);
+            g.fillRoundedRectangle (b.toFloat(), 0.2 * b.getHeight());
+
             g.setColour (Colours::white);
 
             auto q = visualizer.getQuaternion();
@@ -32,6 +35,12 @@ class Visualizer : public Destination
                         String (q.y, 3) + " " +
                         String (q.z, 3);
             g.drawFittedText (text, b, Justification::centred, 1);
+        }
+
+
+        int getWidgetHeight() override
+        {
+            return 40;
         }
 
         void timerCallback() override
@@ -57,7 +66,7 @@ public:
     }
 
 
-    std::unique_ptr<juce::Component> createComponent() override
+    std::unique_ptr<Widget> createWidget() override
     {
         return std::make_unique<Visualizer::Component> (*this);
     }

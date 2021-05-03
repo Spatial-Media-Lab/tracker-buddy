@@ -91,9 +91,10 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
     void destinationAdded (Destination& destination) override
     {
-        auto component = destination.createComponent();
-        addAndMakeVisible (component.get());
+        auto component = destination.createWidget();
+        auto* rawPtr = component.get();
         destinationComponents.push_back (std::move (component));
+        addAndMakeVisible (rawPtr);
         resized();
     }
 
@@ -102,25 +103,51 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
     }
 
+    void childrenChanged() override
+    {
+        setSize (getWidth(), getTotalHeight());
+    }
+
     void resized() override
     {
         auto bounds = getLocalBounds();
+        if (auto target = getTotalHeight(); bounds.getHeight() != target)
+        {
+            setSize (getWidth(), target);
+            return;
+        }
+
+
         auto half = bounds.getWidth() / 2;
 
-        sourceComponent.setBounds (bounds.removeFromLeft (half).removeFromTop (50));
+        sourceComponent.setBounds (bounds.removeFromLeft (half).removeFromTop (sourceComponent.getIdealHeight()));
 
         for (auto& c : destinationComponents)
         {
-            c->setBounds (bounds.removeFromTop (30));
+            c->setBounds (bounds.removeFromTop (c->getWidgetHeight()));
             bounds.removeFromTop (4);
         }
 
-        addDestinationButton.setBounds (bounds.removeFromTop (destinationComponents.empty() ? 30 : 15));
+        addDestinationButton.setBounds (bounds.removeFromTop (destinationComponents.empty() ? 30 : addButtonHeightSmall));
+    }
+
+
+    int getTotalHeight() const
+    {
+        int sum = 0;
+        for (auto& c : destinationComponents)
+            sum += c->getWidgetHeight() + 4;
+
+        sum += addButtonHeightSmall;
+
+        return std::max (sourceComponent.getIdealHeight(), sum);
     }
 
 private:
+    const int addButtonHeightSmall = 15;
+
     TrackerInterfaceComponent sourceComponent;
-    std::list<std::unique_ptr<juce::Component>> destinationComponents;
+    std::list<std::unique_ptr<Destination::Widget>> destinationComponents;
     Connection& connection;
 
     juce::TextButton addDestinationButton;

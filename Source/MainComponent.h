@@ -77,6 +77,11 @@ public:
         }
     }
 
+    void childBoundsChanged (juce::Component* child) override
+    {
+        updateSize();
+    }
+
     void parentSizeChanged() override
     {
         updateSize();
@@ -95,7 +100,7 @@ public:
     {
         int height = 0;
         for (auto& c : components)
-            height += spacing + c->getHeight();
+            height += spacing + c->getTotalHeight();
 
         setSize (getParentWidth(), height);
         resized();
