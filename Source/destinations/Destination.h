@@ -32,22 +32,23 @@ private:
 
 
 
-
 #include "Visualizer.h"
-
+#include "OSCSender.h"
 
 
 struct DestinationFactory
 {
-    static std::array<std::string, 1> getListOfDestinations()
+    static std::array<std::string, 2> getListOfDestinations()
     {
-        return { "Visualizer" };
+        return { Visualizer::name, OSCSender::name};
     };
 
     static std::unique_ptr<Destination> createDestination (TrackerInterface& tracker, std::string destinationName)
     {
-        if (destinationName == "Visualizer")
+        if (destinationName == Visualizer::name)
             return std::make_unique<Visualizer> (tracker);
+        else if (destinationName == OSCSender::name)
+            return std::make_unique<OSCSender> (tracker);
 
         return nullptr;
     }

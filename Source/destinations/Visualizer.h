@@ -53,6 +53,8 @@ class Visualizer : public Destination
     };
 
 public:
+    static constexpr char name[] = "Visualizer";
+
     Visualizer (TrackerInterface& source) : Destination (source)
     {
 
@@ -73,7 +75,7 @@ public:
 
     std::string getName() const override
     {
-        return "Visualizer";
+        return name;
     }
 
     Quaternion getQuaternion()

@@ -23,6 +23,7 @@ target_sources(companion
 
         Source/destinations/Destination.h
         Source/destinations/Visualizer.h
+        Source/destinations/OSCSender.h
         Source/tracker/Connection.h
         Source/tracker/TrackerInterface.cpp
         Source/tracker/TrackerInterface.h
