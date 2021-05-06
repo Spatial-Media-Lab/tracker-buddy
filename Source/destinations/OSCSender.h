@@ -20,6 +20,8 @@ class OSCSender : public Destination
         {
         }
 
+        ~Component() override = default;
+
         void paint (juce::Graphics& g) override
         {
             using namespace juce;

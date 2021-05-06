@@ -85,7 +85,7 @@ public:
 
         trackerInterface.addListener (this);
         trackerInterface.requestConfig();
-        
+
         startTimer (30);
     }
 

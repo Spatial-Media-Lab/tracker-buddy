@@ -12,6 +12,7 @@ public:
     struct Widget : public juce::Component
     {
         virtual int getWidgetHeight() = 0;
+        ~Widget() override = default;
     };
     
     Destination (TrackerInterface& source) : tracker (source)
