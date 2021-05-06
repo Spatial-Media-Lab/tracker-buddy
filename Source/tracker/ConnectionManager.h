@@ -9,7 +9,7 @@ public:
     struct Listener
     {
         virtual void connectionAdded (Connection& connection) {}
-        virtual void connectionRemoved (Connection& connection) {}
+        virtual void connectionAboutToBeRemoved (Connection& connection) {}
     };
 
     ConnectionManager() = default;
@@ -38,7 +38,8 @@ public:
         {
             if (c.get() == connectionToRemove)
             {
-                listeners.call ([&] (Listener& l) { l.connectionRemoved (*connectionToRemove); });
+                listeners.call ([&] (Listener& l)
+                                { l.connectionAboutToBeRemoved (*connectionToRemove); });
 
                 connections.remove (c);
                 return;

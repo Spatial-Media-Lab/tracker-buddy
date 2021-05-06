@@ -67,7 +67,7 @@ public:
         updateSize();
     }
 
-    void connectionRemoved (Connection& connection) override
+    void connectionAboutToBeRemoved (Connection& connection) override
     {
         for (auto& c : components)
             if (&c->getConnection() == &connection)
