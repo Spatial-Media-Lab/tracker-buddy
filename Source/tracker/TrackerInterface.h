@@ -20,7 +20,8 @@ public:
         virtual void connected() {}
         virtual void disconnected() {}
         virtual void connectionFailed() {}
-        virtual void newQuaternionData (const Quaternion& newQuaternion) { }
+        virtual void newQuaternionData (const Quaternion& newQuaternion) {}
+        virtual void configurationReceived (juce::var config) {}
     };
 
     static constexpr float factor = 1.0f / 16384;
@@ -59,6 +60,40 @@ public:
         const auto value = static_cast<int> (hue / 360 * 127);
         if (midiOutput)
             midiOutput->sendMessageNow (juce::MidiMessage::controllerEvent (1, 29, value));
+    }
+
+    void setSaturation (float saturation)
+    {
+        const auto value = static_cast<int> (saturation * 127);
+        if (midiOutput)
+            midiOutput->sendMessageNow (juce::MidiMessage::controllerEvent (1, 30, value));
+    }
+
+    void setBrightness (float brightness)
+    {
+        const auto value = static_cast<int> (brightness * 127);
+        if (midiOutput)
+            midiOutput->sendMessageNow (juce::MidiMessage::controllerEvent (1, 31, value));
+    }
+
+    void writeConfig()
+    {
+        const juce::String json = "}{\"com.versioduo.device\": {\"method\" : \"writeConfiguration\", \"configuration\" : {}}}";
+
+        auto message = juce::MidiMessage::createSysExMessage (json.toUTF8(), json.getNumBytesAsUTF8());
+
+        if (midiOutput)
+            midiOutput->sendMessageNow (message);
+    }
+
+    void requestConfig()
+    {
+        const juce::String json = "}{\"com.versioduo.device\": {\"method\" : \"getAll\"}}";
+
+        auto message = juce::MidiMessage::createSysExMessage (json.toUTF8(), json.getNumBytesAsUTF8());
+
+        if (midiOutput)
+            midiOutput->sendMessageNow (message);
     }
 
     // = Flags ========================================================================

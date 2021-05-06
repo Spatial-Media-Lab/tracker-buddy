@@ -68,7 +68,24 @@ public:
         hueSlider.onValueChange = [&] () { trackerInterface.setHue (hueSlider.getValue()); };
         addAndMakeVisible (hueSlider);
 
+        satSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
+        satSlider.setRange (0.0, 1.0);
+        satSlider.onValueChange = [&] () { trackerInterface.setSaturation (satSlider.getValue()); };
+        addAndMakeVisible (satSlider);
+
+        brightSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 80, 20);
+        brightSlider.setRange (0.0, 1.0);
+        brightSlider.onValueChange = [&] () { trackerInterface.setBrightness (brightSlider.getValue()); };
+        addAndMakeVisible (brightSlider);
+
+
+        writeConfigButton.setButtonText ("write");
+        writeConfigButton.onClick = [&] () { trackerInterface.writeConfig(); };
+        addAndMakeVisible (writeConfigButton);
+
         trackerInterface.addListener (this);
+        trackerInterface.requestConfig();
+        
         startTimer (30);
     }
 
@@ -81,6 +98,7 @@ public:
     void connected() override
     {
         activity.setConnected (true);
+        trackerInterface.requestConfig();
     }
 
     void disconnected() override
@@ -95,6 +113,17 @@ public:
         active = true;
     }
 
+    void configurationReceived (juce::var config) override
+    {
+        auto hue = config.getProperty ("hue", static_cast<float> (hueSlider.getValue()));
+        auto saturation = config.getProperty ("saturation", static_cast<float> (satSlider.getValue()));
+        auto brightness = config.getProperty ("brightness", static_cast<float> (brightSlider.getValue()));
+
+        hueSlider.setValue (hue, juce::dontSendNotification);
+        satSlider.setValue (saturation, juce::dontSendNotification);
+        brightSlider.setValue (brightness, juce::dontSendNotification);
+    }
+
     void paint (juce::Graphics& g) override
     {
         g.setColour (juce::Colours::cornflowerblue.withAlpha (0.1f));
@@ -106,7 +135,12 @@ public:
         auto bounds = getLocalBounds();
         activity.setBounds (bounds.removeFromLeft (bounds.getHeight()));
         bounds.removeFromLeft (10);
-        hueSlider.setBounds (bounds);
+
+        auto width = bounds.getWidth() / 4;
+        hueSlider.setBounds (bounds.removeFromLeft (width));
+        satSlider.setBounds (bounds.removeFromLeft (width));
+        brightSlider.setBounds (bounds.removeFromLeft (width));
+        writeConfigButton.setBounds (bounds.removeFromLeft (width));
     }
 
 
@@ -125,4 +159,7 @@ private:
 
     ActivityComponent activity;
     juce::Slider hueSlider;
+    juce::Slider satSlider;
+    juce::Slider brightSlider;
+    juce::TextButton writeConfigButton;
 };

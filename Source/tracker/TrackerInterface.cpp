@@ -20,30 +20,48 @@ TrackerInterface::~TrackerInterface()
 
 void TrackerInterface::handleIncomingMidiMessage (juce::MidiInput* source, const juce::MidiMessage &message)
 {
-    switch (message.getControllerNumber())
+    if (message.isController())
     {
-        case 48: qwLsb = message.getControllerValue(); break;
-        case 49: qxLsb = message.getControllerValue(); break;
-        case 50: qyLsb = message.getControllerValue(); break;
-        case 51: qzLsb = message.getControllerValue(); break;
+        switch (message.getControllerNumber())
+        {
+            case 48: qwLsb = message.getControllerValue(); break;
+            case 49: qxLsb = message.getControllerValue(); break;
+            case 50: qyLsb = message.getControllerValue(); break;
+            case 51: qzLsb = message.getControllerValue(); break;
 
-        case 16:
-            qw = 2 * (128 * message.getControllerValue() + qwLsb) * factor - 1.0f;
-            break;
+            case 16:
+                qw = 2 * (128 * message.getControllerValue() + qwLsb) * factor - 1.0f;
+                break;
 
-        case 17:
-            qx = 2 * (128 * message.getControllerValue() + qxLsb) * factor - 1.0f;
-            break;
+            case 17:
+                qx = 2 * (128 * message.getControllerValue() + qxLsb) * factor - 1.0f;
+                break;
 
-        case 18:
-            qy = 2 * (128 * message.getControllerValue() + qyLsb) * factor - 1.0f;
-            break;
+            case 18:
+                qy = 2 * (128 * message.getControllerValue() + qyLsb) * factor - 1.0f;
+                break;
 
-        case 19:
-            qz = 2 * (128 * message.getControllerValue() + qzLsb) * factor - 1.0f;
-            normalizeQuaternions();
-            notifyListeners();
-            break;
+            case 19:
+                qz = 2 * (128 * message.getControllerValue() + qzLsb) * factor - 1.0f;
+                normalizeQuaternions();
+                notifyListeners();
+                break;
+        }
+    }
+    else if (message.isSysEx())
+    {
+        juce::String content = juce::String::createStringFromData (message.getSysExData(), message.getSysExDataSize());
+        if (content.startsWith ("}"))
+        {
+            auto json = juce::JSON::fromString (content.substring (1, content.length()));
+            if (auto v = json.getProperty ("com.versioduo.device", juce::var()); ! v.isVoid())
+            {
+                if (auto config = v.getProperty ("configuration", juce::var()); ! v.isVoid())
+                    juce::MessageManager::callAsync([=] () {
+                        listeners.call ([=] (Listener& l) { l.configurationReceived (config); });
+                    });
+            }
+        }
     }
 }
 
