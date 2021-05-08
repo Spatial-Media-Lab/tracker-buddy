@@ -9,10 +9,18 @@
 class Destination : public TrackerInterface::Listener
 {
 public:
-    struct Widget : public juce::Component
+    class Widget : public juce::Component
     {
-        virtual int getWidgetHeight() = 0;
+    public:
+        Widget (Destination& d) : destination (d) {};
         ~Widget() override = default;
+
+        Destination& getDestination() { return destination; };
+
+        virtual int getWidgetHeight() = 0;
+
+    private:
+        Destination& destination;
     };
     
     Destination (TrackerInterface& source) : tracker (source)
@@ -28,6 +36,7 @@ public:
     virtual std::unique_ptr<Widget> createWidget() = 0;
     virtual std::string getName() const = 0;
 private:
+
     TrackerInterface& tracker;
 };
 

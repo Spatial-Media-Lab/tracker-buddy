@@ -5,6 +5,7 @@
 #include "Connection.h"
 #include "ConnectionManager.h"
 
+#include "TrackerInterfaceComponent.h"
 
 struct ConnectionComponent : public juce::Component, public Connection::Listener
 {
@@ -50,10 +51,23 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
     void destinationAdded (Destination& destination) override
     {
-        auto component = destination.createWidget();
-        auto* rawPtr = component.get();
-        destinationComponents.push_back (std::move (component));
-        addAndMakeVisible (rawPtr);
+        auto wrapper = std::make_unique<WidgetWrapper> (destination.createWidget());
+        wrapper->removeButton.onClick = [&] () { connection.removeDestination (&destination); };
+        auto* rawPtr = wrapper.get();
+        destinationComponents.push_back (std::move (wrapper));
+        addAndMakeVisible (rawPtr->widget.get());
+        addAndMakeVisible (rawPtr->removeButton);
+        resized();
+    }
+
+    void destinationAboutToBeRemoved (const Destination& destination) override
+    {
+        for (auto& c : destinationComponents)
+            if (&c->widget->getDestination() == &destination)
+            {
+                destinationComponents.remove (c);
+                break;
+            }
         resized();
     }
 
@@ -80,7 +94,9 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
         for (auto& c : destinationComponents)
         {
-            c->setBounds (bounds.removeFromTop (c->getWidgetHeight()));
+            auto row = bounds.removeFromTop (c->widget->getWidgetHeight());
+            c->removeButton.setBounds (row.removeFromRight (10));
+            c->widget->setBounds (row);
             bounds.removeFromTop (4);
         }
 
@@ -97,7 +113,7 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
     {
         int sum = 0;
         for (auto& c : destinationComponents)
-            sum += c->getWidgetHeight() + 4;
+            sum += c->widget->getWidgetHeight() + 4;
 
         sum += addButtonHeightSmall;
 
@@ -107,11 +123,18 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 private:
     const int addButtonHeightSmall = 15;
 
+    struct WidgetWrapper
+    {
+        WidgetWrapper (std::unique_ptr<Destination::Widget> w) : widget (std::move (w)) {}
+        std::unique_ptr<Destination::Widget> widget;
+        juce::TextButton removeButton;
+    };
+
     ConnectionManager& connectionManager;
     Connection& connection;
 
     TrackerInterfaceComponent sourceComponent;
-    std::list<std::unique_ptr<Destination::Widget>> destinationComponents;
+    std::list<std::unique_ptr<WidgetWrapper>> destinationComponents;
 
 
     juce::TextButton addDestinationButton;

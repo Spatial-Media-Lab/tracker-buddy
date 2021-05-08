@@ -16,7 +16,7 @@ class OSCSender : public Destination
     {
         
     public:
-        Component (OSCSender& v) : visualizer (v)
+        Component (OSCSender& v) : Widget (v), visualizer (v)
         {
         }
 

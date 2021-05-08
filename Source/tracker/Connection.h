@@ -4,7 +4,7 @@
 #include <list>
 #include "../destinations/Destination.h"
 
-#include "TrackerInterfaceComponent.h"
+
 
 struct Connection
 {
@@ -14,7 +14,7 @@ struct Connection
         Listener() {}
         virtual ~Listener() {}
         virtual void destinationAdded (Destination& destination) {}
-        virtual void destinationRemoved (const Destination& destination) {}
+        virtual void destinationAboutToBeRemoved (const Destination& destination) {}
     };
 
 
@@ -35,6 +35,24 @@ struct Connection
 
         listeners.call ([&] (Listener& l) { l.destinationAdded (*newDestination); } );
         destinations.push_back (std::move (newDestination));
+    }
+
+    void removeDestination (Destination* destinationToRemove)
+    {
+        if (! destinationToRemove)
+            return;
+
+        for (auto& c : destinations)
+        {
+            if (c.get() == destinationToRemove)
+            {
+                listeners.call ([&] (Listener& l)
+                                { l.destinationAboutToBeRemoved (*destinationToRemove); });
+
+                destinations.remove (c);
+                return;
+            }
+        }
     }
 
     TrackerInterface& getSource()

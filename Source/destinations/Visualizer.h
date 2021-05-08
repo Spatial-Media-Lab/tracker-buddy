@@ -13,7 +13,7 @@ class Visualizer : public Destination
     class Component : public Destination::Widget, private juce::Timer
     {
     public:
-        Component (Visualizer& v) : visualizer (v)
+        Component (Visualizer& v) : Widget (v), visualizer (v)
         {
             startTimer (50);
         }
