@@ -2,8 +2,13 @@
 
 #include <cmath>
 
-#include "TaitBryan.h"
 
+struct TaitBryan
+{
+    float yaw;
+    float pitch;
+    float roll;
+};
 
 class Quaternion
 {

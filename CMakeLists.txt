@@ -31,7 +31,7 @@ target_sources(companion
         Source/tracker/TrackerInterface.h
         Source/tracker/TrackerInterfaceComponent.h
         Source/tracker/Quaternion.h
-        Source/tracker/TaitBryan.h
+        Source/tracker/RotationData.h
         Source/tracker/MidiDeviceManager.h
         )
 
