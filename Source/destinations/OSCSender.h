@@ -8,9 +8,9 @@
 
 #include "Destination.h"
 #include "../tracker/RotationData.h"
+#include "OSCSenderPlus.h"
 
-
-class OSCSender : public Destination
+class OSCSender : public Destination, public OSCSenderPlus
 {
     struct MessageTemplate
     {
@@ -31,16 +31,34 @@ class OSCSender : public Destination
             editor.setReturnKeyStartsNewLine (true);
             editor.onFocusLost = [&] () { oscSender.setProtocol (editor.getText()); };
             addAndMakeVisible (editor);
+
+            addAndMakeVisible (ip);
+            addAndMakeVisible (port);
+
+            connectButton.setButtonText ("connect");
+            connectButton.onClick = [&] () { toggleConnection(); };
+            addAndMakeVisible (connectButton);
         }
 
         ~Component() override = default;
+
+        void toggleConnection()
+        {
+            if (oscSender.isConnected())
+                oscSender.disconnect();
+            else
+                oscSender.connect (ip.getText(), port.getText().getIntValue());
+
+            connectButton.setButtonText (oscSender.isConnected() ? "disconnect" : "connect");
+        }
+
 
         void paint (juce::Graphics& g) override
         {
             using namespace juce;
 
             auto b = getLocalBounds();
-            g.setColour (Colours::limegreen);
+            g.setColour (Colours::limegreen.withAlpha (0.1f));
             g.fillRoundedRectangle (b.toFloat(), 0.2 * b.getHeight());
 
             g.setColour (Colours::white);
@@ -50,19 +68,31 @@ class OSCSender : public Destination
 
         void resized() override
         {
-            auto bounds = getLocalBounds().reduced (10);
+            auto bounds = getLocalBounds().reduced (12);
+            auto row = bounds.removeFromTop (20);
+            connectButton.setBounds (row.removeFromRight (50));
+            row.removeFromRight (5);
+            port.setBounds (row.removeFromRight (50));
+            row.removeFromRight (5);
+            ip.setBounds (row);
+
+            bounds.removeFromTop (10);
             editor.setBounds (bounds);
         }
 
         int getWidgetHeight() override
         {
-            return 110;
+            return 150;
         }
 
 
 
     private:
         OSCSender& oscSender;
+
+        juce::TextEditor ip;
+        juce::TextEditor port;
+        juce::TextButton connectButton;
 
         juce::TextEditor editor;
     };
@@ -92,6 +122,9 @@ public:
             }
 
             std::cout << std::endl;
+
+            if (isConnected())
+                send (m);
         }
     }
 
@@ -149,5 +182,4 @@ public:
 
 private:
     std::vector<std::unique_ptr<MessageTemplate>> protocol;
-    juce::OSCSender oscSender;
 };

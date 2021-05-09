@@ -27,6 +27,7 @@ target_sources(companion
         Source/tracker/Connection.h
         Source/tracker/ConnectionComponent.h
         Source/tracker/ConnectionManager.h
+        Source/tracker/OSCSenderPlus.h
         Source/tracker/TrackerInterface.cpp
         Source/tracker/TrackerInterface.h
         Source/tracker/TrackerInterfaceComponent.h
