@@ -24,10 +24,11 @@ target_sources(companion
         Source/destinations/Destination.h
         Source/destinations/Visualizer.h
         Source/destinations/OSCSender.h
+        Source/destinations/OSCSenderPlus.h
+
         Source/tracker/Connection.h
         Source/tracker/ConnectionComponent.h
         Source/tracker/ConnectionManager.h
-        Source/tracker/OSCSenderPlus.h
         Source/tracker/TrackerInterface.cpp
         Source/tracker/TrackerInterface.h
         Source/tracker/TrackerInterfaceComponent.h
@@ -50,7 +51,7 @@ target_link_libraries(companion
         juce::juce_gui_extra
         juce::juce_audio_devices
         juce::juce_osc
-        
+
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags)
