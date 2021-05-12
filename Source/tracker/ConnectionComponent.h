@@ -9,21 +9,22 @@
 
 struct ConnectionComponent : public juce::Component, public Connection::Listener
 {
+    static constexpr int leftWidth = 200;
+    static constexpr int rightWidth = 400;
+
     ConnectionComponent (Connection& c, ConnectionManager& cm) : connection (c), connectionManager (cm), sourceComponent (c.getSource())
     {
         addAndMakeVisible (sourceComponent);
 
-        addDestinationButton.setButtonText ("Add Destination...");
+        addDestinationButton.setButtonText ("+");
         addDestinationButton.onClick = [&] () { createDestinationPopup(); };
         addAndMakeVisible (addDestinationButton);
 
-        removeConnectionButton.setButtonText ("Remove");
+        removeConnectionButton.setButtonText ("-");
         removeConnectionButton.onClick = [&] () { connectionManager.removeConnection (&c); };
         addAndMakeVisible (removeConnectionButton);
 
         connection.addListener (this);
-
-        setSize (400, 80);
     }
 
 
@@ -58,6 +59,7 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         addAndMakeVisible (rawPtr->widget.get());
         addAndMakeVisible (rawPtr->removeButton);
         resized();
+        repaint();
     }
 
     void destinationAboutToBeRemoved (const Destination& destination) override
@@ -69,11 +71,29 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
                 break;
             }
         resized();
+        repaint();
     }
 
     void paint (juce::Graphics& g) override
     {
+        g.setColour (juce::Colours::white);
 
+        const auto start = addDestinationButton.getBoundsInParent().toFloat().getCentre();
+
+        for (auto& c : destinationComponents)
+        {
+            juce::Path line;
+            const auto end = c->removeButton.getBoundsInParent().toFloat().getCentre();
+            const auto center = (start + end) / 2;
+
+            const auto controlA = juce::Point<float> ((start.getX() + center.getX()) / 2, start.getY());
+            const auto controlB = juce::Point<float> ((end.getX() + center.getX()) / 2, end.getY());
+
+            line.startNewSubPath (start);
+            line.quadraticTo (controlA, center);
+            line.quadraticTo (controlB, end);
+            g.strokePath (line, juce::PathStrokeType (2.0f));
+        }
     }
 
     void resized() override
@@ -85,22 +105,21 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
             return;
         }
 
+        auto leftCol = bounds.removeFromLeft (leftWidth);
+        auto rightCol = bounds.removeFromRight (rightWidth);
 
-        auto half = bounds.getWidth() / 2;
+        sourceComponent.setBounds (leftCol.removeFromTop (sourceComponent.getIdealHeight()));
+        addDestinationButton.setBounds (bounds.removeFromTop (25).removeFromLeft (25));
 
-        sourceComponent.setBounds (bounds.removeFromLeft (half).removeFromTop (sourceComponent.getIdealHeight()));
-
-        removeConnectionButton.setBounds (bounds.removeFromLeft (50).removeFromTop (20));
+        removeConnectionButton.setBounds (bounds.removeFromTop (20).removeFromLeft (20));
 
         for (auto& c : destinationComponents)
         {
-            auto row = bounds.removeFromTop (c->widget->getWidgetHeight());
-            c->removeButton.setBounds (row.removeFromRight (10));
+            auto row = rightCol.removeFromTop (c->widget->getWidgetHeight());
+            c->removeButton.setBounds (row.removeFromLeft (25).removeFromTop (25));
             c->widget->setBounds (row);
-            bounds.removeFromTop (4);
+            rightCol.removeFromTop (4);
         }
-
-        addDestinationButton.setBounds (bounds.removeFromTop (destinationComponents.empty() ? 30 : addButtonHeightSmall));
     }
 
     Connection& getConnection()
@@ -125,7 +144,11 @@ private:
 
     struct WidgetWrapper
     {
-        WidgetWrapper (std::unique_ptr<Destination::Widget> w) : widget (std::move (w)) {}
+        WidgetWrapper (std::unique_ptr<Destination::Widget> w) : widget (std::move (w))
+        {
+            removeButton.setButtonText ("-");
+        }
+
         std::unique_ptr<Destination::Widget> widget;
         juce::TextButton removeButton;
     };
