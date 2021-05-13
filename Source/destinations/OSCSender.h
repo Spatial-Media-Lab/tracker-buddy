@@ -27,6 +27,8 @@ class OSCSender : public Destination, public OSCSenderPlus
     public:
         Component (OSCSender& o) : Widget (o), oscSender (o)
         {
+            expanded = false;
+
             editor.setMultiLine (true);
             editor.setReturnKeyStartsNewLine (true);
             editor.onFocusLost = [&] () { oscSender.setProtocol (editor.getText()); };
@@ -82,13 +84,20 @@ class OSCSender : public Destination, public OSCSenderPlus
 
         int getWidgetHeight() override
         {
-            return 150;
+            return expanded ? 250 : 150;
         }
 
+        void mouseDown (const juce::MouseEvent& event) override
+        {
+            expanded = ! expanded;
+            setSize (getWidth(), getWidgetHeight());
+        }
 
 
     private:
         OSCSender& oscSender;
+
+        bool expanded;
 
         juce::TextEditor ip;
         juce::TextEditor port;
@@ -100,7 +109,7 @@ class OSCSender : public Destination, public OSCSenderPlus
 public:
     static constexpr char name[] = "OSCSender";
 
-    OSCSender (TrackerInterface& source) : Destination (source)
+    OSCSender (TrackerInterface& source) : Destination (source), protocolValid (juce::Result::ok())
     {
     }
 
@@ -141,6 +150,7 @@ public:
 
     juce::Result setProtocol (juce::String protocolToSet)
     {
+        protocolString = protocolToSet;
         protocol.clear();
 
         auto lines = juce::StringArray::fromLines (protocolToSet);
@@ -159,7 +169,8 @@ public:
                 }
                 catch (juce::OSCFormatError error)
                 {
-                    return juce::Result::fail (error.description);
+                    protocolValid = juce::Result::fail (error.description);
+                    return protocolValid;
                 }
 
 
@@ -168,18 +179,24 @@ public:
                     if (auto ptr = RotationData::getMemberPointer (args[i]); ptr)
                         p->arguments.push_back (ptr);
                     else
-                        return juce::Result::fail ("'" + args[i] + "' is not a valid argument!");
+                    {
+                        protocolValid = juce::Result::fail ("'" + args[i] + "' is not a valid argument!");
+                        return protocolValid;
+                    }
                 }
 
                 protocol.push_back (std::move (p));
             }
         }
 
-        return juce::Result::ok();
+        protocolValid = juce::Result::ok();
+        return protocolValid;
     }
 
 
 
 private:
+    juce::String protocolString;
+    juce::Result protocolValid;
     std::vector<std::unique_ptr<MessageTemplate>> protocol;
 };
