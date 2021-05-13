@@ -74,6 +74,12 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         repaint();
     }
 
+    void childBoundsChanged (Component* child) override
+    {
+        resized();
+        repaint();
+    }
+
     void paint (juce::Graphics& g) override
     {
         g.setColour (juce::Colours::white);
