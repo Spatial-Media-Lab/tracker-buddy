@@ -13,8 +13,6 @@
 #include "destinations/Visualizer.h"
 
 
-
-
 class ConnectionList : public juce::Component, public ConnectionManager::Listener
 {
     static constexpr int spacing = 10;
@@ -34,7 +32,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        g.fillAll (juce::Colours::cornflowerblue.withAlpha (0.1f));
+        g.fillAll (juce::Colour (54, 70, 84));
     }
 
     void resized() override

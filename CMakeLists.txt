@@ -26,6 +26,7 @@ target_sources(companion
         Source/destinations/OSCSender.h
         Source/destinations/OSCSenderPlus.h
 
+        Source/tracker/AddButton.h
         Source/tracker/Connection.h
         Source/tracker/ConnectionComponent.h
         Source/tracker/ConnectionManager.h
@@ -33,6 +34,7 @@ target_sources(companion
         Source/tracker/TrackerInterface.h
         Source/tracker/TrackerInterfaceComponent.h
         Source/tracker/Quaternion.h
+        Source/tracker/RemoveButton.h
         Source/tracker/RotationData.h
         Source/tracker/MidiDeviceManager.h
         )

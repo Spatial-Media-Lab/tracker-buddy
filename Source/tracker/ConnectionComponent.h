@@ -6,6 +6,9 @@
 #include "ConnectionManager.h"
 
 #include "TrackerInterfaceComponent.h"
+#include "AddButton.h"
+#include "RemoveButton.h"
+
 
 struct ConnectionComponent : public juce::Component, public Connection::Listener
 {
@@ -16,11 +19,9 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
     {
         addAndMakeVisible (sourceComponent);
 
-        addDestinationButton.setButtonText ("+");
         addDestinationButton.onClick = [&] () { createDestinationPopup(); };
         addAndMakeVisible (addDestinationButton);
 
-        removeConnectionButton.setButtonText ("-");
         removeConnectionButton.onClick = [&] () { connectionManager.removeConnection (&c); };
         addAndMakeVisible (removeConnectionButton);
 
@@ -82,7 +83,7 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
     void paint (juce::Graphics& g) override
     {
-        g.setColour (juce::Colours::white);
+        g.setColour (juce::Colours::white.withAlpha (0.5f));
 
         const auto start = addDestinationButton.getBoundsInParent().toFloat().getCentre();
 
@@ -115,14 +116,16 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         auto rightCol = bounds.removeFromRight (rightWidth);
 
         sourceComponent.setBounds (leftCol.removeFromTop (sourceComponent.getIdealHeight()));
-        addDestinationButton.setBounds (bounds.removeFromTop (25).removeFromLeft (25));
+        addDestinationButton.setBounds (bounds.removeFromTop (20).removeFromLeft (20));
+
+        bounds.removeFromTop (3);
 
         removeConnectionButton.setBounds (bounds.removeFromTop (20).removeFromLeft (20));
 
         for (auto& c : destinationComponents)
         {
             auto row = rightCol.removeFromTop (c->widget->getWidgetHeight());
-            c->removeButton.setBounds (row.removeFromLeft (25).removeFromTop (25));
+            c->removeButton.setBounds (row.removeFromLeft (20).removeFromTop (20));
             c->widget->setBounds (row);
             rightCol.removeFromTop (4);
         }
@@ -140,23 +143,17 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         for (auto& c : destinationComponents)
             sum += c->widget->getWidgetHeight() + 4;
 
-        sum += addButtonHeightSmall;
-
         return std::max (sourceComponent.getIdealHeight(), sum);
     }
 
 private:
-    const int addButtonHeightSmall = 15;
-
     struct WidgetWrapper
     {
         WidgetWrapper (std::unique_ptr<Destination::Widget> w) : widget (std::move (w))
-        {
-            removeButton.setButtonText ("-");
-        }
+        {}
 
         std::unique_ptr<Destination::Widget> widget;
-        juce::TextButton removeButton;
+        RemoveButton removeButton;
     };
 
     ConnectionManager& connectionManager;
@@ -166,8 +163,8 @@ private:
     std::list<std::unique_ptr<WidgetWrapper>> destinationComponents;
 
 
-    juce::TextButton addDestinationButton;
-    juce::TextButton removeConnectionButton;
+    AddButton addDestinationButton;
+    RemoveButton removeConnectionButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionComponent)
 };
