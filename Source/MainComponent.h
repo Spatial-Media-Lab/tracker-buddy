@@ -32,12 +32,15 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        g.fillAll (juce::Colour (54, 70, 84));
+        g.setColour ({180, 180, 200});
+        g.fillRoundedRectangle (getLocalBounds().toFloat(), 5.0f);
     }
 
     void resized() override
     {
         auto bounds = getLocalBounds();
+        bounds.removeFromLeft (spacing);
+        bounds.removeFromBottom (spacing);
 
         for (auto& t : components)
         {
@@ -80,7 +83,7 @@ public:
 
     void updateSize()
     {
-        int height = 0;
+        int height = spacing;
         for (auto& c : components)
             height += spacing + c->getTotalHeight();
 

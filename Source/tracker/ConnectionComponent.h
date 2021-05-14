@@ -12,7 +12,7 @@
 
 struct ConnectionComponent : public juce::Component, public Connection::Listener
 {
-    static constexpr int leftWidth = 200;
+    static constexpr int leftWidth = 380;
     static constexpr int rightWidth = 400;
 
     ConnectionComponent (Connection& c, ConnectionManager& cm) : connection (c), connectionManager (cm), sourceComponent (c.getSource())
@@ -105,6 +105,8 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
 
     void resized() override
     {
+        const int buttonSize = 20;
+
         auto bounds = getLocalBounds();
         if (auto target = getTotalHeight(); bounds.getHeight() != target)
         {
@@ -115,12 +117,15 @@ struct ConnectionComponent : public juce::Component, public Connection::Listener
         auto leftCol = bounds.removeFromLeft (leftWidth);
         auto rightCol = bounds.removeFromRight (rightWidth);
 
-        sourceComponent.setBounds (leftCol.removeFromTop (sourceComponent.getIdealHeight()));
-        addDestinationButton.setBounds (bounds.removeFromTop (20).removeFromLeft (20));
+        const auto idealHeight = sourceComponent.getIdealHeight();
+        sourceComponent.setBounds (leftCol.removeFromTop (idealHeight));
 
-        bounds.removeFromTop (3);
+        auto buttonCol = bounds.removeFromLeft (buttonSize);
+        buttonCol.removeFromTop ((sourceComponent.getIdealHeight() - buttonSize) / 2);
+        addDestinationButton.setBounds (buttonCol.removeFromTop (buttonSize));
 
-        removeConnectionButton.setBounds (bounds.removeFromTop (20).removeFromLeft (20));
+        buttonCol.removeFromTop (3);
+        removeConnectionButton.setBounds (buttonCol.removeFromTop (buttonSize));
 
         for (auto& c : destinationComponents)
         {

@@ -11,13 +11,13 @@ MainComponent::MainComponent() : connectionList (connectionManager)
     addDeviceButton.onClick = [&] () { showDeviceList(); };
     addAndMakeVisible (addDeviceButton);
 
-    setSize (800, 600);
+    setSize (900, 600);
 }
 
 //==============================================================================
 void MainComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll (juce::Colour (200, 200, 220));
 }
 
 void MainComponent::resized()

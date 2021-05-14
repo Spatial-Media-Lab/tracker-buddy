@@ -62,8 +62,16 @@ class TrackerInterfaceComponent : public juce::Component, public TrackerInterfac
 
         void paint (juce::Graphics& g) override
         {
+            auto bounds = getLocalBounds();
+
+            auto padding = 0.25f * bounds.getHeight();
+            auto leds = bounds.toFloat().reduced (padding);
+
             g.setColour (currentColour);
-            g.fillRoundedRectangle (getLocalBounds().toFloat(), 4.0f);
+            g.fillRoundedRectangle (leds, 1.0f);
+
+            juce::DropShadow shadow (currentColour, padding, {0, 0});
+            shadow.drawForRectangle (g, leds.toNearestInt());
         }
 
         void mouseUp (const juce::MouseEvent& event) override
@@ -108,7 +116,7 @@ class TrackerInterfaceComponent : public juce::Component, public TrackerInterfac
     };
 
 public:
-    static int getIdealHeight() { return 80; };
+    static int getIdealHeight() { return 98; };
 
     TrackerInterfaceComponent (TrackerInterface& interface) :
     trackerInterface (interface),
@@ -170,12 +178,32 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        g.setColour (juce::Colours::cornflowerblue.withAlpha (0.1f));
-        g.fillAll();
+        auto bounds = getLocalBounds().toFloat();
+        auto w = bounds.getWidth();
+        auto h = bounds.getHeight();
 
-        g.setColour (juce::Colours::white);
+        // background
+        g.setColour (juce::Colour (30, 30, 30));
+        g.fillRoundedRectangle (bounds, 5.0f);
 
-        auto row = getLocalBounds().removeFromTop (25);
+        // screws
+        const auto D = 0.204081633 * h;
+        auto circle = juce::Rectangle<float> (0, 0, D, D);
+        circle.setCentre (0.22f * w, bounds.getCentreY());
+        g.setColour (juce::Colours::black);
+        g.fillEllipse (circle);
+        g.setColour (juce::Colour (50, 50, 50));
+        g.drawEllipse (circle, 1.0f);
+        circle.setCentre (0.78f * w, bounds.getCentreY());
+        g.setColour (juce::Colours::black);
+        g.fillEllipse (circle);
+        g.setColour (juce::Colour (50, 50, 50));
+        g.drawEllipse (circle, 1.0f);
+
+
+        g.setColour ({220, 220, 220});
+
+        auto row = getLocalBounds().reduced (5).removeFromTop (25);
         row.removeFromLeft (25 + 4);
         g.setFont (20.0f);
         g.drawText (name, row, juce::Justification::left);
@@ -184,17 +212,19 @@ public:
     void resized() override
     {
         auto bounds = getLocalBounds();
+        auto w = bounds.getWidth();
+        auto h = bounds.getHeight();
+
+        colourPicker.setBounds (juce::Rectangle<int> (0, 0, (0.22 + 0.62) * h, 2 * 0.22 * h).withCentre ({static_cast<int> (0.4 * w), bounds.getCentreY()}));
+
+        bounds.reduce (5, 5);
         auto row = bounds.removeFromTop (25);
 
         activity.setBounds (row.removeFromLeft (25));
         row.removeFromLeft (10);
 
-        bounds.removeFromTop (3);
-
-        row = bounds.removeFromTop (25);
-        colourPicker.setBounds (row.removeFromLeft (40));
-        row.removeFromLeft (50);
-        writeConfigButton.setBounds (row);
+        row = bounds.removeFromBottom (25);
+        writeConfigButton.setBounds (row.removeFromRight (60));
     }
 
     void timerCallback() override
