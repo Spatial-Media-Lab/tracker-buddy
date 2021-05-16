@@ -23,6 +23,7 @@ target_sources(companion
         Source/tracker/IpAndPortComponent.h
 
         Source/destinations/Destination.h
+        Source/destinations/Values.h
         Source/destinations/Visualizer.h
         Source/destinations/OSCSender.h
         Source/destinations/OSCSenderPlus.h

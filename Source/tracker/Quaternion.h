@@ -53,6 +53,16 @@ public:
                            w * q.z + x * q.y - y * q.x + z * q.w);
     }
 
+    bool operator== (const Quaternion &q) const
+    {
+        return w == q.w && x == q.x && y == q.y && z == q.z;
+    }
+
+    bool operator!= (const Quaternion &q) const
+    {
+        return w != q.w || x != q.x || y != q.y || z != q.z;
+    }
+
     void scale (float factor)
     {
         w *= factor;

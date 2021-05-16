@@ -5,44 +5,20 @@
 #include <JuceHeader.h>
 
 #include "Destination.h"
-#include "../tracker/RotationData.h"
 
 
 class Visualizer : public Destination
 {
     class Component : public Destination::Widget, private juce::Timer
     {
+        struct Vec
+        {
+            float x, y, z;
+        };
+
     public:
         Component (Visualizer& v) : Widget (v), visualizer (v)
         {
-            qw.setRange (-1.0, 1.0, 0.0);
-            qx.setRange (-1.0, 1.0, 0.0);
-            qy.setRange (-1.0, 1.0, 0.0);
-            qz.setRange (-1.0, 1.0, 0.0);
-
-            qw.setNumDecimalPlacesToDisplay (3);
-            qx.setNumDecimalPlacesToDisplay (3);
-            qy.setNumDecimalPlacesToDisplay (3);
-            qz.setNumDecimalPlacesToDisplay (3);
-
-            addAndMakeVisible (qw);
-            addAndMakeVisible (qx);
-            addAndMakeVisible (qy);
-            addAndMakeVisible (qz);
-
-            
-            yaw.setRange   (-180.0, 180.0, 0.0);
-            pitch.setRange (-180.0, 180.0, 0.0);
-            roll.setRange  (-180.0, 180.0, 0.0);
-
-            yaw.setNumDecimalPlacesToDisplay (1);
-            pitch.setNumDecimalPlacesToDisplay (1);
-            roll.setNumDecimalPlacesToDisplay (1);
-
-            addAndMakeVisible (yaw);
-            addAndMakeVisible (pitch);
-            addAndMakeVisible (roll);
-
             startTimer (50);
         }
 
@@ -50,28 +26,64 @@ class Visualizer : public Destination
         {
             using namespace juce;
 
+
             auto b = getLocalBounds();
             g.setColour (Colours::cornflowerblue);
-            g.fillRoundedRectangle (b.toFloat(), 0.2 * b.getHeight());
+
+
+
+            auto centre = b.toFloat().getCentre();
+
+            auto r = 0.25f * b.getHeight();
+
+            {
+                Vec p {1 - 2 * q.y * q.y - 2 * q.z * q.z,
+                2 * q.x * q.y + 2* q.w * q.z,
+                2 * q.x * q.z - 2* q.w * q.y};
+
+                auto cr = 8 + 4 * p.z;
+                auto circ = Rectangle<float> (-p.y * r + centre.getY() - cr,
+                                               - p.x * r + centre.getY() - cr,
+                                              2 * cr, 2 * cr);
+
+                g.setColour (Colours::white);
+                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
+            }
+
+            {
+                Vec p {2 * q.x * q.y - 2 * q.w * q.z,
+                1 - 2 * q.x * q.x - 2 * q.z * q.z,
+                2 * q.y * q.z + 2 * q.w * q.x};
+
+                auto cr = 8 + 4 * p.z;
+                auto circ = Rectangle<float> (-p.y * r + centre.getY() - cr,
+                                               - p.x * r + centre.getY() - cr,
+                                              2 * cr, 2 * cr);
+
+                g.setColour (Colours::cornflowerblue);
+                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
+            }
+
+            {
+                Vec p {2 * q.x * q.y - 2 * q.w * q.z,
+                1 - 2 * q.x * q.x - 2 * q.z * q.z,
+                2 * q.y * q.z + 2 * q.w * q.x};
+
+                auto cr = 8 - 4 * p.z;
+                auto circ = Rectangle<float> (p.y * r + centre.getY() - cr,
+                                                p.x * r + centre.getY() - cr,
+                                              2 * cr, 2 * cr);
+
+                g.setColour (Colours::red);
+                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
+            }
+
+
+
         }
 
         void resized() override
         {
-            auto bounds = getLocalBounds().reduced (5);
-
-            const auto half = (bounds.getWidth() - 8) / 2;
-
-            auto leftCol = bounds.removeFromLeft (half);
-            auto rightCol = bounds.removeFromLeft (half);
-
-            qw.setBounds (leftCol.removeFromTop (10));
-            qx.setBounds (leftCol.removeFromTop (10));
-            qy.setBounds (leftCol.removeFromTop (10));
-            qz.setBounds (leftCol.removeFromTop (10));
-
-            yaw.setBounds (rightCol.removeFromTop (10));
-            pitch.setBounds (rightCol.removeFromTop (10));
-            roll.setBounds (rightCol.removeFromTop (10));
         }
 
         int getWidgetHeight() override
@@ -81,29 +93,17 @@ class Visualizer : public Destination
 
         void timerCallback() override
         {
-            auto data = RotationData (visualizer.getQuaternion());
-
-            qw.setValue (data.qw);
-            qx.setValue (data.qx);
-            qy.setValue (data.qy);
-            qz.setValue (data.qz);
-
-            yaw.setValue (data.yawDegrees);
-            pitch.setValue (data.pitchDegrees);
-            roll.setValue (data.rollDegrees);
+            auto data = visualizer.getQuaternion();
+            if (q != data)
+            {
+                q = data;
+                repaint();
+            }
         }
 
     private:
         Visualizer& visualizer;
-
-        juce::Slider qw;
-        juce::Slider qx;
-        juce::Slider qy;
-        juce::Slider qz;
-
-        juce::Slider yaw;
-        juce::Slider pitch;
-        juce::Slider roll;
+        Quaternion q;
     };
 
 public:
