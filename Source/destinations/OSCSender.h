@@ -8,6 +8,7 @@
 
 #include "Destination.h"
 #include "../tracker/RotationData.h"
+#include "../tracker/IpAndPortComponent.h"
 #include "OSCSenderPlus.h"
 
 class OSCSender : public Destination, public OSCSenderPlus
@@ -34,8 +35,7 @@ class OSCSender : public Destination, public OSCSenderPlus
             editor.onFocusLost = [&] () { oscSender.setProtocol (editor.getText()); };
             addAndMakeVisible (editor);
 
-            addAndMakeVisible (ip);
-            addAndMakeVisible (port);
+            addAndMakeVisible (ipAndPort);
 
             connectButton.setButtonText ("connect");
             connectButton.onClick = [&] () { toggleConnection(); };
@@ -49,7 +49,7 @@ class OSCSender : public Destination, public OSCSenderPlus
             if (oscSender.isConnected())
                 oscSender.disconnect();
             else
-                oscSender.connect (ip.getText(), port.getText().getIntValue());
+                oscSender.connect (ipAndPort.getIP(), ipAndPort.getPort());
 
             connectButton.setButtonText (oscSender.isConnected() ? "disconnect" : "connect");
         }
@@ -71,12 +71,10 @@ class OSCSender : public Destination, public OSCSenderPlus
         void resized() override
         {
             auto bounds = getLocalBounds().reduced (12);
-            auto row = bounds.removeFromTop (20);
+            auto row = bounds.removeFromTop (30);
             connectButton.setBounds (row.removeFromRight (50));
             row.removeFromRight (5);
-            port.setBounds (row.removeFromRight (50));
-            row.removeFromRight (5);
-            ip.setBounds (row);
+            ipAndPort.setBounds (row);
 
             bounds.removeFromTop (10);
             editor.setBounds (bounds);
@@ -99,8 +97,7 @@ class OSCSender : public Destination, public OSCSenderPlus
 
         bool expanded;
 
-        juce::TextEditor ip;
-        juce::TextEditor port;
+        IpAndPortComponent ipAndPort;
         juce::TextButton connectButton;
 
         juce::TextEditor editor;

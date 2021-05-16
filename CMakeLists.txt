@@ -20,6 +20,7 @@ target_sources(companion
         Source/Main.cpp
         Source/MainComponent.cpp
         Source/MainComponent.h
+        Source/tracker/IpAndPortComponent.h
 
         Source/destinations/Destination.h
         Source/destinations/Visualizer.h
