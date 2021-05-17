@@ -14,6 +14,8 @@ class Visualizer : public Destination
         struct Vec
         {
             float x, y, z;
+            juce::String label;
+            juce::Colour colour;
         };
 
     public:
@@ -26,60 +28,35 @@ class Visualizer : public Destination
         {
             using namespace juce;
 
-
             auto b = getLocalBounds();
-            g.setColour (Colours::cornflowerblue);
-
-
+            g.fillAll (Colours::cornflowerblue.withAlpha(0.1f));
 
             auto centre = b.toFloat().getCentre();
+            auto radius = 0.25f * b.getHeight();
 
-            auto r = 0.25f * b.getHeight();
+            float fx = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
+            float fy = 2 * q.x * q.y + 2* q.w * q.z;
+            float fz = 2 * q.x * q.z - 2* q.w * q.y;
 
-            {
-                Vec p {1 - 2 * q.y * q.y - 2 * q.z * q.z,
-                2 * q.x * q.y + 2* q.w * q.z,
-                2 * q.x * q.z - 2* q.w * q.y};
+            float lx = 2 * q.x * q.y - 2 * q.w * q.z;
+            float ly = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
+            float lz = 2 * q.y * q.z + 2 * q.w * q.x;
 
-                auto cr = 8 + 4 * p.z;
-                auto circ = Rectangle<float> (-p.y * r + centre.getY() - cr,
-                                               - p.x * r + centre.getY() - cr,
-                                              2 * cr, 2 * cr);
+            float rx = -lx;
+            float ry = -ly;
+            float rz = -lz;
 
-                g.setColour (Colours::white);
-                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
-            }
+            std::vector<Vec> elements (3);
+            elements.push_back ({lx, ly, lz, "L", Colours::cornflowerblue});
+            elements.push_back ({fx, fy, fz, "F", Colours::white});
+            elements.push_back ({rx, ry, rz, "R", Colours::red});
 
-            {
-                Vec p {2 * q.x * q.y - 2 * q.w * q.z,
-                1 - 2 * q.x * q.x - 2 * q.z * q.z,
-                2 * q.y * q.z + 2 * q.w * q.x};
-
-                auto cr = 8 + 4 * p.z;
-                auto circ = Rectangle<float> (-p.y * r + centre.getY() - cr,
-                                               - p.x * r + centre.getY() - cr,
-                                              2 * cr, 2 * cr);
-
-                g.setColour (Colours::cornflowerblue);
-                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
-            }
-
-            {
-                Vec p {2 * q.x * q.y - 2 * q.w * q.z,
-                1 - 2 * q.x * q.x - 2 * q.z * q.z,
-                2 * q.y * q.z + 2 * q.w * q.x};
-
-                auto cr = 8 - 4 * p.z;
-                auto circ = Rectangle<float> (p.y * r + centre.getY() - cr,
-                                                p.x * r + centre.getY() - cr,
-                                              2 * cr, 2 * cr);
-
-                g.setColour (Colours::red);
-                g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
-            }
-
-
-
+            if (lz < 0)
+                for (auto i = elements.begin(); i != elements.end(); ++i)
+                    drawThumb (g, centre, *i, radius);
+            else
+                for (auto i = elements.rbegin(); i != elements.rend(); ++i)
+                    drawThumb (g, centre, *i, radius);
         }
 
         void resized() override
@@ -88,7 +65,7 @@ class Visualizer : public Destination
 
         int getWidgetHeight() override
         {
-            return 100;
+            return 150;
         }
 
         void timerCallback() override
@@ -102,6 +79,21 @@ class Visualizer : public Destination
         }
 
     private:
+        void drawThumb (juce::Graphics& g, juce::Point<float> centre, Vec v, float r)
+        {
+            auto cr = 8 + 4 * v.z;
+            auto circ = juce::Rectangle<float> (-v.y * r + centre.getX() - cr,
+                                            -v.x * r + centre.getY() - cr,
+                                          2 * cr, 2 * cr);
+
+            g.setColour (v.colour);
+            g.fillRoundedRectangle (circ.toFloat(), circ.getHeight());
+
+            g.setColour (juce::Colours::black);
+            g.setFont (2 * cr);
+            g.drawText (v.label, circ, juce::Justification::centred);
+        }
+
         Visualizer& visualizer;
         Quaternion q;
     };
